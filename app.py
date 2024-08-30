@@ -22,7 +22,7 @@ import uvicorn
 app = FastAPI()
 
 
-@app.route("/root")
+@app.get("/")
 def root():
    print("Inside function")
    return("Hello world")
