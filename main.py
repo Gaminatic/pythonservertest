@@ -48,7 +48,8 @@ db_connection = DatabaseConnection()
 
 @app.get("/")
 def root():
-   print("Inside function",os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING'))
+   print("Inside function")
+   print("db_uri",os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING'))
    return("Hello world")
 
 

@@ -93,14 +93,18 @@ class DatabaseConnection:
     async def get_pool(self):
         if self._pool is None:
             print("Creating new connection pool")
-            db_params = {
-                "database": os.getenv('PGDATABASE'),
-                "user": os.getenv('PGUSER'),
-                "password": os.getenv('PGPASSWORD'),
-                "host": os.getenv('PGHOST'),
-                "port": os.getenv('PGPORT')
-            }
-            self._pool = await asyncpg.create_pool(**db_params)
+            # db_params = {
+            #     "database": os.getenv('PGDATABASE'),
+            #     "user": os.getenv('PGUSER'),
+            #     "password": os.getenv('PGPASSWORD'),
+            #     "host": os.getenv('PGHOST'),
+            #     "port": os.getenv('PGPORT')
+            # }
+            db_uri = os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING')
+            print("url",db_uri)
+            self._pool = await asyncpg.create_pool(db_uri)
+
+            # self._pool = await asyncpg.create_pool(**db_params)
         else:
             print("Reusing existing connection pool")
         return self._pool
