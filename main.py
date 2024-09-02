@@ -17,10 +17,9 @@
 #    app.run()
 
 from contextlib import asynccontextmanager
-import logging
 import os
 import asyncpg
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from dotenv import load_dotenv
 import uvicorn
 from connection import db_url,getUsersDetails
@@ -46,14 +45,41 @@ load_dotenv()
 # app = FastAPI(lifespan=lifespan)
 
 
-@app.get("/")
-def root():
-   print("Inside function",os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING'))
-   return("Hello world")
+# @app.get("/")
+# def root():
+#    print("Inside function",os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING'))
+#    return("Hello world")
 
+
+# @app.get("/getUsers")
+# async def get_users():
+#    print("Inside function get_users")
+#    pool = await create_pool_connection(pool)
+#    users = await getUsersDetails()
+#    return users
+
+
+
+from fastapi import FastAPI, HTTPException
+from dotenv import load_dotenv
+import uvicorn
+import logging
+import os
+import asyncpg
+import ssl
+ 
+app = FastAPI()
+load_dotenv()
+ 
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
-
+ 
+@app.get("/")
+def root():
+   logger.info("Inside root function")
+   logger.info(f"PostgreSQL Connection String: {os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING')}")
+   return "Hello world"
+ 
 @app.get("/getUsers")
 async def get_users():
     logger.info("Inside function get_users")
@@ -66,16 +92,28 @@ async def get_users():
     except Exception as e:
         logger.error(f"Error in get_users: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
-
+ 
 async def create_pool_connection():
-    logger.info("inside connection")
-    db_uri = os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING')
-    if not db_uri:
-        logger.error("AZURE_POSTGRESQL_CONNECTIONSTRING is not set")
-        raise ValueError("AZURE_POSTGRESQL_CONNECTIONSTRING environment variable is not set.")
-    logger.info(f"DB URI: {db_uri}")
-    return await asyncpg.create_pool(db_uri)
-
+    try:
+        logger.info("Creating connection pool")
+        db_uri = os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING')
+        if not db_uri:
+            logger.error("AZURE_POSTGRESQL_CONNECTIONSTRING is not set")
+            raise ValueError("AZURE_POSTGRESQL_CONNECTIONSTRING environment variable is not set.")
+ 
+        # Using asyncpg's SSL context
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE  # Consider changing to CERT_REQUIRED if you have a valid certificate
+ 
+        logger.info(f"DB URI: {db_uri}")
+        pool = await asyncpg.create_pool(dsn=db_uri, ssl=ssl_context, min_size=1, max_size=10)  # Configure the pool
+        logger.info("Connection pool created successfully.")
+        return pool
+    except Exception as e:
+        logger.error(f"Error creating pool connection: {e}")
+        raise HTTPException(status_code=500, detail="Could not connect to the database")
+ 
 async def getUsersDetails(pool):
     try:
         async with pool.acquire() as connection:
@@ -84,8 +122,6 @@ async def getUsersDetails(pool):
     except asyncpg.PostgresError as e:
         logger.error(f"Database error: {e}")
         raise HTTPException(status_code=500, detail="Database error")
-
-
-
+ 
 if __name__ == '__main__':
-   uvicorn.run(app,host="0.0.0.0",port=8000)
+   uvicorn.run(app, host="0.0.0.0", port=8000)
