@@ -22,9 +22,9 @@ import asyncpg
 from fastapi import FastAPI
 from dotenv import load_dotenv
 import uvicorn
-from connection import db_url,getUsersDetails
-
-from connection import create_pool_connection
+# from connection import db_url,getUsersDetails
+# from connection import create_pool_connection
+from connection import DatabaseConnection, getUsersDetails
 
 app = FastAPI()
 load_dotenv()
@@ -44,6 +44,7 @@ load_dotenv()
 
 # app = FastAPI(lifespan=lifespan)
 
+db_connection = DatabaseConnection()
 
 @app.get("/")
 def root():
@@ -51,13 +52,19 @@ def root():
    return("Hello world")
 
 
+# @app.get("/getUsers")
+# async def get_users():
+#    print("Inside function get_users")
+#    pool = await create_pool_connection(pool)
+#    users = await getUsersDetails()
+#    return users
+
 @app.get("/getUsers")
 async def get_users():
-   print("Inside function get_users")
-   pool = await create_pool_connection(pool)
-   users = await getUsersDetails()
-   return users
-
+    pool = await db_connection.get_pool()  
+    async with pool.acquire() as connection:
+        users = await getUsersDetails(connection)
+    return users
 
 
 if __name__ == '__main__':
