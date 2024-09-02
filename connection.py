@@ -102,7 +102,7 @@ class DatabaseConnection:
             # }
             db_uri = os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING')
             print("url",db_uri)
-            self._pool = await asyncpg.create_pool(db_uri)
+            self._pool = await asyncpg.create_pool(dsn=db_uri,timeout = 60)
 
             # self._pool = await asyncpg.create_pool(**db_params)
         else:
