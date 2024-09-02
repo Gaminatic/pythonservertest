@@ -55,11 +55,29 @@ async def with_connection(func, *args, **kwargs):
         await release_connection(conn)
 
 
-async def getUsersDetails(conn):
-    try:
-        result = await conn.fetchrow('SELECT * FROM users')
-        return result   
+# async def getUsersDetails(conn):
+#     try:
+#         result = await conn.fetchrow('SELECT * FROM users')
+#         return result   
     
-    except Exception as e:
-        raise e
+#     except Exception as e:
+#         raise e
+    
+
+async def create_pool_connection():
+    print("inside connection")
+    db_uri = os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING')
+    print(f"DB URI: {db_uri}") 
+    return await asyncpg.create_pool(db_uri, min_size=1, max_size=20)
+
+
+async def getUsersDetails(pool:asyncpg.pool):
+    async with pool.acquire() as conn:
+        try:
+            users = await conn.fetchrow("SELECT * FROM users")
+            return users
+
+        except asyncpg.PostgresError as e:
+            raise e   
+
 
