@@ -81,44 +81,34 @@ load_dotenv()
 #             raise e   
 
 
-class DatabaseConnection:
-    _instance = None
-    _pool = None
+# class DatabaseConnection:
+#     _instance = None
+#     _pool = None
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(DatabaseConnection, cls).__new__(cls)
-        return cls._instance
+#     def __new__(cls):
+#         if cls._instance is None:
+#             cls._instance = super(DatabaseConnection, cls).__new__(cls)
+#         return cls._instance
 
-    async def get_pool(self):
-        if self._pool is None:
-            print("Creating new connection pool")
-            # db_params = {
-            #     "database": os.getenv('PGDATABASE'),
-            #     "user": os.getenv('PGUSER'),
-            #     "password": os.getenv('PGPASSWORD'),
-            #     "host": os.getenv('PGHOST'),
-            #     "port": os.getenv('PGPORT')
-            # }
-            db_uri = os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING')
-            print("url",db_uri)
-            self._pool = await asyncpg.create_pool(dsn=db_uri,timeout = 60)
+#     async def get_pool(self):
+#         if self._pool is None:
+#             print("Creating new connection pool")
+#             db_uri = os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING')
+#             print("url",db_uri)
+#             self._pool = await asyncpg.create_pool(dsn=db_uri,timeout = 60)
+#         else:
+#             print("Reusing existing connection pool")
+#         return self._pool
 
-            # self._pool = await asyncpg.create_pool(**db_params)
-        else:
-            print("Reusing existing connection pool")
-        return self._pool
+#     async def close_pool(self):
+#         if self._pool is not None:
+#             await self._pool.close()
+#             self._pool = None
+#             print("Connection pool closed")
 
-    async def close_pool(self):
-        if self._pool is not None:
-            await self._pool.close()
-            self._pool = None
-            print("Connection pool closed")
-
-
-async def getUsersDetails(connection):
-    try:
-        users = await connection.fetchrow("SELECT * FROM users")
-        return users
-    except asyncpg.PostgresError as e:
-        raise e
+# async def getUsersDetails(connection):
+#     try:
+#         users = await connection.fetchrow("SELECT * FROM users")
+#         return users
+#     except asyncpg.PostgresError as e:
+#         raise e
