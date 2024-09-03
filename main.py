@@ -1,37 +1,38 @@
-# from fastapi import FastAPI, HTTPException
-# import asyncpg
-# import os
+from fastapi import FastAPI, HTTPException
+import asyncpg
+import os
 
-# app = FastAPI()
+app = FastAPI()
 
-# DATABASE_URL = "postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require"
+DATABASE_URL = "postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require"
 
-# @app.on_event("startup")
-# async def startup():
-#     app.state.db_pool = await asyncpg.create_pool(DATABASE_URL)
+@app.on_event("startup")
+async def startup():
+    app.state.db_pool = await asyncpg.create_pool(DATABASE_URL)
 
-# @app.on_event("shutdown")
-# async def shutdown():
-#     await app.state.db_pool.close()
+@app.on_event("shutdown")
+async def shutdown():
+    await app.state.db_pool.close()
 
 
-# @app.get("/")
-# async def root():
-#     print("inside root function")
-#     return("Hello world")
+@app.get("/")
+async def root():
+    print("inside root function")
+    return("Root function")
     
 
-# @app.get("/users")
-# async def get_Users():
-#     print("before get connection")
-#     async with app.state.db_pool.acquire() as connection:
-#         print("get user funct",DATABASE_URL)
-#         query = "SELECT * FROM users"
-#         result = await connection.fetchrow(query)
-#         if result:
-#             return dict(result)
-#         else:
-#             raise HTTPException(status_code=404, detail="user not found")
+@app.get("/users")
+async def get_Users():
+    print("before get connection")
+    async with app.state.db_pool.acquire() as connection:
+        print("get user funct",DATABASE_URL)
+        query = "SELECT * FROM users"
+        result = await connection.fetchrow(query)
+        if result:
+            return dict(result)
+        else:
+            raise HTTPException(status_code=404, detail="user not found")
+
 
 # from typing import List
 # import asyncpg
@@ -199,48 +200,49 @@
 
 
 
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
-from flask import Flask,jsonify
-import psycopg2
-import os
-from dotenv import load_dotenv
+# flask
+# from flask import Flask,jsonify
+# import psycopg2
+# import os
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
-app = Flask(__name__)
+# app = Flask(__name__)
 
-db_url = os.getenv("AZURE_POSTGRESQL_CONNECTIONSTRING")
-print("db_url",db_url)
-if not db_url:
-    print("db_url inside",db_url)
-    db_url = 'postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require'
+# db_url = os.getenv("AZURE_POSTGRESQL_CONNECTIONSTRING")
+# print("db_url",db_url)
+# if not db_url:
+#     print("db_url inside",db_url)
+#     db_url = 'postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require'
 
 
-def get_db_connection():
-    print("inside db connection")
-    conn = psycopg2.connect(db_url)
-    return conn
+# def get_db_connection():
+#     print("inside db connection")
+#     conn = psycopg2.connect(db_url)
+#     return conn
 
-@app.route('/')
-def root():
-    print("inside root")
-    return "hiii im running"
+# @app.route('/')
+# def root():
+#     print("inside root")
+#     return "hiii im running"
 
-@app.route('/users')
-def get_users():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM users')
-    users = cur.fetchall()
-    cur.close()
-    conn.close()
-    return jsonify([dict(zip([desc[0] for desc in cur.description], row)) for row in users])
+# @app.route('/users')
+# def get_users():
+#     conn = get_db_connection()
+#     cur = conn.cursor()
+#     cur.execute('SELECT * FROM users')
+#     users = cur.fetchall()
+#     cur.close()
+#     conn.close()
+#     return jsonify([dict(zip([desc[0] for desc in cur.description], row)) for row in users])
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(debug=True)
 
 
