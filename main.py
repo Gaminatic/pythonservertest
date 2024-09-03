@@ -88,85 +88,85 @@
 #     return {"users data",user}
 
 
-from fastapi import Depends, FastAPI, HTTPException
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, select
-from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
-from sqlalchemy.orm import Session, sessionmaker
-import os
-from sqlalchemy.exc import SQLAlchemyError
+# from fastapi import Depends, FastAPI, HTTPException
+# from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, select
+# from sqlalchemy.orm import sessionmaker
+# from dotenv import load_dotenv
+# from sqlalchemy.orm import Session, sessionmaker
+# import os
+# from sqlalchemy.exc import SQLAlchemyError
 
-# Load environment variables from .env file
-load_dotenv()
+# # Load environment variables from .env file
+# load_dotenv()
 
-# Get database connection details from environment variables
-# host_server = os.getenv('PGHOST')
-# db_server_port = os.getenv('PGPORT')
-# database_name = os.getenv('PGDATABASE')
-# db_username = os.getenv('PGUSER')
-# db_password = os.getenv('PGPASSWORD')
-# ssl_mode = os.getenv('SSL')
+# # Get database connection details from environment variables
+# # host_server = os.getenv('PGHOST')
+# # db_server_port = os.getenv('PGPORT')
+# # database_name = os.getenv('PGDATABASE')
+# # db_username = os.getenv('PGUSER')
+# # db_password = os.getenv('PGPASSWORD')
+# # ssl_mode = os.getenv('SSL')
 
-# Construct the database URL
-DATABASE_URL = f'postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require'
+# # Construct the database URL
+# DATABASE_URL = f'postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require'
 
-# Create an SQLAlchemy engine
-engine = create_engine(DATABASE_URL)
+# # Create an SQLAlchemy engine
+# engine = create_engine(DATABASE_URL)
 
-# Define the metadata and users table
-metadata = MetaData()
-users_table = Table(
-    'users', metadata,
-    Column('userid', String, primary_key=True),
-    Column('username', String),
-    Column('mailid', String)
-)
+# # Define the metadata and users table
+# metadata = MetaData()
+# users_table = Table(
+#     'users', metadata,
+#     Column('userid', String, primary_key=True),
+#     Column('username', String),
+#     Column('mailid', String)
+# )
 
-# Create a session
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# # Create a session
+# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-app = FastAPI()
-
-
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Define metadata and users table
-metadata = MetaData()
-
-users = Table(
-    'users', metadata,
-    Column('userid', String, primary_key=True, nullable=False),
-    Column('username', String),
-    Column('mailid', String)
-)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# app = FastAPI()
 
 
-@app.get("/")
-async def root():
-    print("inside root function")
-    return("Hello world")
+
+# engine = create_engine(DATABASE_URL)
+# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# # Define metadata and users table
+# metadata = MetaData()
+
+# users = Table(
+#     'users', metadata,
+#     Column('userid', String, primary_key=True, nullable=False),
+#     Column('username', String),
+#     Column('mailid', String)
+# )
+
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
 
 
-@app.get("/users")
-async def get_users(db: Session = Depends(get_db)):
-    print("before get db connection")
-    try:
-        stmt = select(users.c.userid, users.c.username, users.c.mailid)
-        result = db.execute(stmt)
-        print("result",result)
-        users_list = [{"userid": row.userid, "username": row.username, "mailid": row.mailid} for row in result]
-        return {"users": users_list}
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.get("/")
+# async def root():
+#     print("inside root function")
+#     return("Hello world")
+
+
+# @app.get("/users")
+# async def get_users(db: Session = Depends(get_db)):
+#     print("before get db connection")
+#     try:
+#         stmt = select(users.c.userid, users.c.username, users.c.mailid)
+#         result = db.execute(stmt)
+#         print("result",result)
+#         users_list = [{"userid": row.userid, "username": row.username, "mailid": row.mailid} for row in result]
+#         return {"users": users_list}
+#     except SQLAlchemyError as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 # @app.on_event("startup")
 # async def startup():
@@ -199,6 +199,57 @@ async def get_users(db: Session = Depends(get_db)):
 
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+from quart import Quart, jsonify
+import asyncpg
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app = Quart(__name__)
+
+db_url = os.getenv("AZURE_POSTGRESQL_CONNECTIONSTRING")
+print("db_url",db_url)
+if not db_url:
+    print("db_url inside",db_url)
+
+    db_url = 'postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require'
+
+@app.before_serving
+async def connect_to_db():
+    app.db = await asyncpg.create_pool(dsn=db_url)
+
+@app.route('/')
+async def root():
+    return "hii im running"
+
+
+@app.route('/users')
+async def get_users():
+    async with app.db.acquire() as connection:
+        users = await connection.fetch('SELECT * FROM users')
+    return jsonify([dict(user) for user in users])
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+   app.run()
+
+
