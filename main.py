@@ -158,9 +158,11 @@ async def root():
 
 @app.get("/users")
 async def get_users(db: Session = Depends(get_db)):
+    print("before get db connection")
     try:
         stmt = select(users.c.userid, users.c.username, users.c.mailid)
         result = db.execute(stmt)
+        print("result",result)
         users_list = [{"userid": row.userid, "username": row.username, "mailid": row.mailid} for row in result]
         return {"users": users_list}
     except SQLAlchemyError as e:
