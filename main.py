@@ -203,53 +203,44 @@
 #     import uvicorn
 #     uvicorn.run(app, host="0.0.0.0", port=8000)
 
-from quart import Quart, jsonify
-import asyncpg
+
+from flask import Flask,jsonify
+import psycopg2
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Quart(__name__)
+app = Flask(__name__)
 
 db_url = os.getenv("AZURE_POSTGRESQL_CONNECTIONSTRING")
 print("db_url",db_url)
 if not db_url:
     print("db_url inside",db_url)
-
     db_url = 'postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require'
 
-@app.before_serving
-async def connect_to_db():
-    app.db = await asyncpg.create_pool(dsn=db_url)
+
+def get_db_connection():
+    print("inside db connection")
+    conn = psycopg2.connect(db_url)
+    return conn
 
 @app.route('/')
-async def root():
-    return "hii im running"
-
+def root():
+    print("inside root")
+    return "hiii im running"
 
 @app.route('/users')
-async def get_users():
-    async with app.db.acquire() as connection:
-        users = await connection.fetch('SELECT * FROM users')
-    return jsonify([dict(user) for user in users])
+def get_users():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM users')
+    users = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify([dict(zip([desc[0] for desc in cur.description], row)) for row in users])
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-if __name__ == '__main__':
-   app.run()
 
 
