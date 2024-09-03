@@ -1,104 +1,37 @@
-# import os
-
-# from flask import (Flask, redirect, render_template, request,
-#                    send_from_directory, url_for)
-
-# app = Flask(__name__)
-
-
-# @app.route('/')
-# def index():
-#    print('Request for index page received')
-#    return ('hello, I am running')
-
-
-
-# if __name__ == '__main__':
-#    app.run()
-
-from contextlib import asynccontextmanager
-import os
+from fastapi import FastAPI, HTTPException
 import asyncpg
-from fastapi import FastAPI
-from dotenv import load_dotenv
-import uvicorn
-# from connection import db_url,getUsersDetails
-# from connection import create_pool_connection
-# from connection import DatabaseConnection, getUsersDetails
+import os
 
 app = FastAPI()
-load_dotenv()
 
+DATABASE_URL = "postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require"
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     print("database",os.getenv("PGDATABASE"))
-#     print("db url",db_url)
-#     await acquire_connection()
-#     print(asyncpg.__version__)
-#     try:
-#         yield
-#     finally:
-#         await close_pool()
+@app.on_event("startup")
+async def startup():
+    app.state.db_pool = await asyncpg.create_pool(DATABASE_URL)
 
+@app.on_event("shutdown")
+async def shutdown():
+    await app.state.db_pool.close()
 
-# app = FastAPI(lifespan=lifespan)
-
-class DatabaseConnection:
-    _instance = None
-    _pool = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(DatabaseConnection, cls).__new__(cls)
-        return cls._instance
-
-    async def get_pool(self):
-        if self._pool is None:
-            print("Creating new connection pool")
-            db_uri = os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING')
-            print("url",db_uri)
-            self._pool = await asyncpg.create_pool(dsn=db_uri,timeout = 60)
-        else:
-            print("Reusing existing connection pool")
-        return self._pool
-
-    async def close_pool(self):
-        if self._pool is not None:
-            await self._pool.close()
-            self._pool = None
-            print("Connection pool closed")
-
-async def getUsersDetails(connection):
-    try:
-        users = await connection.fetchrow("SELECT * FROM users")
-        return users
-    except asyncpg.PostgresError as e:
-        raise e
-
-db_connection = DatabaseConnection()
 
 @app.get("/")
-def root():
-   print("Inside function")
-   print("db_uri",os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING'))
-   return("Hello world")
+async def root():
+    print("inside root function")
+    return("Hello world")
+    
 
+@app.get("/users")
+async def get_Users():
+    async with app.state.db_pool.acquire() as connection:
+        print("get user funct",DATABASE_URL)
+        query = "SELECT * FROM users"
+        result = await connection.fetchrow(query)
+        if result:
+            return dict(result)
+        else:
+            raise HTTPException(status_code=404, detail="user not found")
 
-# @app.get("/getUsers")
-# async def get_users():
-#    print("Inside function get_users")
-#    pool = await create_pool_connection(pool)
-#    users = await getUsersDetails()
-#    return users
-
-@app.get("/getUsers")
-async def get_users():
-    pool = await db_connection.get_pool()  
-    async with pool.acquire() as connection:
-        users = await getUsersDetails(connection)
-    return users
-
-
-if __name__ == '__main__':
-   uvicorn.run(app,host="0.0.0.0",port=8000)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
