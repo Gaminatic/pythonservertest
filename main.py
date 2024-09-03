@@ -88,154 +88,33 @@
 #     return {"users data",user}
 
 
-# from fastapi import Depends, FastAPI, HTTPException
-# from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, select
-# from sqlalchemy.orm import sessionmaker
-# from dotenv import load_dotenv
-# from sqlalchemy.orm import Session, sessionmaker
-# import os
-# from sqlalchemy.exc import SQLAlchemyError
-
-# # Load environment variables from .env file
-# load_dotenv()
-
-# # Get database connection details from environment variables
-# # host_server = os.getenv('PGHOST')
-# # db_server_port = os.getenv('PGPORT')
-# # database_name = os.getenv('PGDATABASE')
-# # db_username = os.getenv('PGUSER')
-# # db_password = os.getenv('PGPASSWORD')
-# # ssl_mode = os.getenv('SSL')
-
-# # Construct the database URL
-# DATABASE_URL = f'postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require'
-
-# # Create an SQLAlchemy engine
-# engine = create_engine(DATABASE_URL)
-
-# # Define the metadata and users table
-# metadata = MetaData()
-# users_table = Table(
-#     'users', metadata,
-#     Column('userid', String, primary_key=True),
-#     Column('username', String),
-#     Column('mailid', String)
-# )
-
-# # Create a session
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# app = FastAPI()
-
-
-
-# engine = create_engine(DATABASE_URL)
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# # Define metadata and users table
-# metadata = MetaData()
-
-# users = Table(
-#     'users', metadata,
-#     Column('userid', String, primary_key=True, nullable=False),
-#     Column('username', String),
-#     Column('mailid', String)
-# )
-
-# def get_db():
-#     db = SessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
-
-
-# @app.get("/")
-# async def root():
-#     print("inside root function")
-#     return("Hello world")
-
-
-# @app.get("/users")
-# async def get_users(db: Session = Depends(get_db)):
-#     print("before get db connection")
-#     try:
-#         stmt = select(users.c.userid, users.c.username, users.c.mailid)
-#         result = db.execute(stmt)
-#         print("result",result)
-#         users_list = [{"userid": row.userid, "username": row.username, "mailid": row.mailid} for row in result]
-#         return {"users": users_list}
-#     except SQLAlchemyError as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-# # @app.on_event("startup")
-# # async def startup():
-# #     # Connect to the database at startup
-# #     metadata.create_all(bind=engine)
-
-# # @app.on_event("shutdown")
-# # async def shutdown():
-# #     # Optionally close the engine or clean up any resources
-# #     engine.dispose()
-
-# # @app.get("/users")
-# # async def get_users():
-# #     # Create a new session
-# #     session = SessionLocal()
-# #     try:
-# #         # Execute a query to select all users
-# #         query = select([users_table])
-# #         result = session.execute(query).fetchall()
-# #         if not result:
-# #             raise HTTPException(status_code=404, detail="No users found")
-# #         return {"users": [dict(row) for row in result]}
-# #     except Exception as e:
-# #         print(f"Error fetching users: {e}")
-# #         raise HTTPException(status_code=500, detail="Internal Server Error")
-# #     finally:
-# #         # Close the session after the query
-# #         session.close()
-
-
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, select
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+from sqlalchemy.orm import Session, sessionmaker
 import os
-import urllib.parse
-import databases
-import sqlalchemy
-from sqlalchemy import Table, Column, String
-from fastapi import FastAPI, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from dotenv import  load_dotenv
+from sqlalchemy.exc import SQLAlchemyError
+
+# Load environment variables from .env file
 load_dotenv()
 
-# Load environment variables
-host_server = os.environ.get('PGHOST')
-db_server_port = urllib.parse.quote_plus(str(os.environ.get('PGPORT')))  # Default to 5432
-database_name = os.environ.get('PGDATABASE')
-db_username = urllib.parse.quote_plus(str(os.environ.get('PGUSER')))
-db_password = urllib.parse.quote_plus(str(os.environ.get('PGPASSWORD')))
-ssl_mode = urllib.parse.quote_plus(str(os.environ.get('SSL', 'prefer')))  # Default to 'prefer'
+# Get database connection details from environment variables
+# host_server = os.getenv('PGHOST')
+# db_server_port = os.getenv('PGPORT')
+# database_name = os.getenv('PGDATABASE')
+# db_username = os.getenv('PGUSER')
+# db_password = os.getenv('PGPASSWORD')
+# ssl_mode = os.getenv('SSL')
 
+# Construct the database URL
+DATABASE_URL = f'postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require'
 
-print(f"PGHOST: {host_server}")
-print(f"PGPORT: {db_server_port}")
-print(f"PGDATABASE: {database_name}")
-print(f"PGUSER: {db_username}")
-print(f"PGPASSWORD: {db_password}")
-print(f"SSL: {ssl_mode}")
+# Create an SQLAlchemy engine
+engine = create_engine(DATABASE_URL)
 
-# Validate environment variables
-if not host_server or not db_server_port.isdigit() or not database_name or not db_username or not db_password:
-    raise ValueError("Missing one or more required environment variables for database connection.")
-
-# Construct DATABASE_URL
-DATABASE_URL = f'postgresql://{db_username}:{db_password}@{host_server}:{db_server_port}/{database_name}?sslmode={ssl_mode}'
-
-# Database and metadata setup
-database = databases.Database(DATABASE_URL)
-metadata = sqlalchemy.MetaData()
-
-# Define table schema
+# Define the metadata and users table
+metadata = MetaData()
 users_table = Table(
     'users', metadata,
     Column('userid', String, primary_key=True),
@@ -243,41 +122,81 @@ users_table = Table(
     Column('mailid', String)
 )
 
-# Create engine and tables
-engine = sqlalchemy.create_engine(DATABASE_URL, pool_size=3, max_overflow=0)
-metadata.create_all(engine)
+# Create a session
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# FastAPI setup
-app = FastAPI(title="REST API using FastAPI PostgreSQL Async EndPoints")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
+app = FastAPI()
+
+
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Define metadata and users table
+metadata = MetaData()
+
+users = Table(
+    'users', metadata,
+    Column('userid', String, primary_key=True, nullable=False),
+    Column('username', String),
+    Column('mailid', String)
 )
-app.add_middleware(GZipMiddleware)
 
-@app.on_event("startup")
-async def startup():
-    await database.connect()
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
-@app.get("/rootapi")
+@app.get("/")
 async def root():
-    print("inside root")
-    return ("hello world")
+    print("inside root function")
+    return("Hello world")
 
 
-@app.get("/users", status_code=status.HTTP_200_OK)
-async def read_users():
-    print("inside read users")
-    query = users_table.select()
-    return await database.fetch_all(query)
+@app.get("/users")
+async def get_users(db: Session = Depends(get_db)):
+    print("before get db connection")
+    try:
+        stmt = select(users.c.userid, users.c.username, users.c.mailid)
+        result = db.execute(stmt)
+        print("result",result)
+        users_list = [{"userid": row.userid, "username": row.username, "mailid": row.mailid} for row in result]
+        return {"users": users_list}
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# @app.on_event("startup")
+# async def startup():
+#     # Connect to the database at startup
+#     metadata.create_all(bind=engine)
+
+# @app.on_event("shutdown")
+# async def shutdown():
+#     # Optionally close the engine or clean up any resources
+#     engine.dispose()
+
+# @app.get("/users")
+# async def get_users():
+#     # Create a new session
+#     session = SessionLocal()
+#     try:
+#         # Execute a query to select all users
+#         query = select([users_table])
+#         result = session.execute(query).fetchall()
+#         if not result:
+#             raise HTTPException(status_code=404, detail="No users found")
+#         return {"users": [dict(row) for row in result]}
+#     except Exception as e:
+#         print(f"Error fetching users: {e}")
+#         raise HTTPException(status_code=500, detail="Internal Server Error")
+#     finally:
+#         # Close the session after the query
+#         session.close()
+
+
 
 
 if __name__ == "__main__":
