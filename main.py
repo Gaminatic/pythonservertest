@@ -31,6 +31,7 @@ async def lifespan(app: FastAPI):
         await close_pool()
 
 
+
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(getUsers,tags=['users getting'])
