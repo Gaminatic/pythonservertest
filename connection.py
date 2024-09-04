@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import os
 from urllib.parse import quote_plus
@@ -62,6 +63,16 @@ async def getUsersDetails(conn):
     
     except Exception as e:
         raise e
+    
+
+async def login_user(email, password,conn):
+    try:
+        result = await conn.fetchrow('SELECT * FROM login($1, $2)', email, password)
+        if result:
+            return json.loads(result['login'])
+        return None
+    except Exception as e:
+        raise e    
     
 
 # async def create_pool_connection():

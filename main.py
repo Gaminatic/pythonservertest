@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import psycopg2
 from routers.getuser import router as getUsers
+from routers.signin import router as signin
 from connection import acquire_connection, close_pool, getUsersDetails, with_connection
 load_dotenv()
 
@@ -35,6 +36,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(getUsers,tags=['users getting'])
+app.include_router(signin,tags=['users getting'])
+
 
 
 
