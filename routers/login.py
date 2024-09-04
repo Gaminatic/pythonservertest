@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.connection import with_connection
-from app.database.connection import login_user
+from app.database.db import login_user
 from fastapi.security import  OAuth2PasswordRequestForm
 from jwtoken import create_access_token
 

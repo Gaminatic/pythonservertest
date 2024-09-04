@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.database.connection import with_connection
-from app.database.connection import signup
+from app.database.db import signup
 from jwtoken import create_access_token
 from models import Signup
 
