@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 import asyncpg
 import os
 
+import psycopg2
+
 app = FastAPI()
 
 # DATABASE_URL = "postgresql://azureuser:sevenlake%40123@fitness-db-public.postgres.database.azure.com:5432/postgres?sslmode=require"
@@ -83,51 +85,62 @@ load_dotenv()
 
 class DatabaseConnection:
     _instance = None
-    _pool = None
+    _connection = None
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(DatabaseConnection, cls).__new__(cls)
         return cls._instance
 
-    async def get_pool(self):
-        if self._pool is None:
-            print("Creating new connection pool")
+    def get_connection(self):
+        if self._connection is None:
+            print("Creating new database connection")
             db_uri = os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING')
-            print("url",db_uri)
-            self._pool = await asyncpg.create_pool(dsn=db_uri,timeout = 60)
+            self._connection = psycopg2.connect(dsn=db_uri)
         else:
-            print("Reusing existing connection pool")
-        return self._pool
+            print("Reusing existing database connection")
+        return self._connection
 
-    async def close_pool(self):
-        if self._pool is not None:
-            await self._pool.close()
-            self._pool = None
-            print("Connection pool closed")
+    def close_connection(self):
+        if self._connection is not None:
+            self._connection.close()
+            self._connection = None
+            print("Database connection closed")
 
-async def getUsersDetails(connection):
+def get_users_details(connection):
     try:
-        users = await connection.fetchrow("SELECT * FROM users")
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM users")
+            users = cursor.fetchone()
         return users
-    except asyncpg.PostgresError as e:
+    except psycopg2.Error as e:
         raise e
 
 db_connection = DatabaseConnection()
 
 @app.get("/")
 def root():
-   print("Inside function")
-   print("db_uri",os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING'))
-   return("Hello world")
-
+    print("Inside function")
+    print("db_uri", os.getenv('AZURE_POSTGRESQL_CONNECTIONSTRING'))
+    return "Hello world"
 
 @app.get("/getUsers")
-async def get_users():
-    pool = await db_connection.get_pool()  
-    async with pool.acquire() as connection:
-        users = await getUsersDetails(connection)
+def get_users():
+    connection = db_connection.get_connection()
+    try:
+        users = get_users_details(connection)
+    finally:
+        pass
     return users
+
+
+
+# @app.get("/getUsers")
+# async def get_users():
+#     pool = await db_connection.get_pool()  
+#     async with pool.acquire() as connection:
+#         users = await getUsersDetails(connection)
+#     return users
 
 
 
