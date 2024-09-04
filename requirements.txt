@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Flask==2.2.2
 gunicorn
 Werkzeug==2.2.2
@@ -10,3 +11,23 @@ psycopg2-binary
 python-dotenv
 quart
 jsonify
+=======
+fastapi
+asyncpg
+uvicorn
+pydantic
+datetime
+urllib3
+pyjwt
+requests
+httpx
+python-dateutil
+python-jose
+oauthlib
+passlib
+requests_oauthlib
+python-multipart
+python-dotenv
+gunicorn
+Werkzeug==2.2.2
+>>>>>>> d471909bb50b04bf5934e2e3ad3da0041536542f
