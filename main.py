@@ -37,6 +37,7 @@ app.include_router(getUsers,tags=['users getting'])
 
 
 
+
 @app.get("/")
 async def root():
     print("inside root function")
