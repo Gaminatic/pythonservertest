@@ -7,6 +7,7 @@ from models import Signup
 router = APIRouter()
 
 
+
 @router.post("/signup")
 async def create_user(s: Signup):
     try:
