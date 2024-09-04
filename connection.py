@@ -57,7 +57,7 @@ async def with_connection(func, *args, **kwargs):
 
 async def getUsersDetails(conn):
     try:
-        result = await conn.fetchrow('SELECT * FROM users')
+        result = await conn.fetchrow('SELECT * FROM getUsers()')
         return result   
     
     except Exception as e:
