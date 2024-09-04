@@ -128,9 +128,12 @@ def root():
 def get_users():
     connection = db_connection.get_connection()
     try:
-        users = get_users_details(connection)
+        users = get_users_details(connection)    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
     finally:
-        pass
+        if 'connection' in locals() and connection:
+            connection.close()
     return users
 
 
