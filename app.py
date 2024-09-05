@@ -85,13 +85,6 @@ def root():
    return("Hello world")
 
 
-# @app.get("/getUsers")
-# async def get_users():
-#    print("Inside function get_users")
-#    pool = await create_pool_connection(pool)
-#    users = await getUsersDetails()
-#    return users
-
 @app.get("/getUsers")
 async def get_users():
     pool = await db_connection.get_pool()  
