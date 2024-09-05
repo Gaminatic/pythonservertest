@@ -11,4 +11,5 @@ oauthlib
 passlib
 requests_oauthlib
 python-multipart
-
+pyjwt
+python-jose

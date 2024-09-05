@@ -3,7 +3,7 @@ from fastapi.security import  OAuth2PasswordRequestForm
 from connection import with_connection
 from connection import login_user
 
-# from jwtoken import create_access_token
+from jwtoken import create_access_token
 router = APIRouter()
 
 @router.post("/signin")
@@ -18,10 +18,10 @@ async def signinUser(form_data: OAuth2PasswordRequestForm = Depends()):
         if not user_id:
             raise HTTPException(status_code=500, detail="UserID not found in response")
 
-        # access_token = create_access_token(data={"user_id": str(user_id)})
-        # print("token",access_token)
-        # return {"access_token": access_token, "token_type": "bearer", "user_details": user_dict}
-        return user_dict
+        access_token = create_access_token(data={"user_id": str(user_id)})
+        print("token",access_token)
+        return {"access_token": access_token, "token_type": "bearer", "user_details": user_dict}
+        # return user_dict
 
     except Exception as e:
         print(f"Error: {str(e)}")
